@@ -9,13 +9,13 @@ from dotenv import load_dotenv
 
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 
-from fastapi import FastAPI, Request, Query
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import FastAPI, Request, Query, Form
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from app.database import init_db, get_tenders, get_tender_by_id, get_stats, get_unnotified_tenders, mark_as_notified
+from app.database import init_db, get_tenders, get_tender_by_id, get_stats, get_unnotified_tenders, mark_as_notified, get_setting, set_setting
 from app.crawler import run_all_crawlers
 from app.notifications import send_batch_notifications, format_budget
 
@@ -130,6 +130,7 @@ async def tenders_page(
     source: Optional[str] = Query(None),
     min_score: Optional[int] = Query(None),
     status: Optional[str] = Query(None),
+    nhs_software: bool = Query(False),
     sort: str = Query("published_at"),
     order: str = Query("DESC"),
     page: int = Query(1, ge=1),
@@ -141,6 +142,7 @@ async def tenders_page(
         source=source,
         min_score=min_score,
         status=status,
+        nhs_software=nhs_software,
         sort_by=sort,
         sort_order=order,
         page=page,
@@ -165,6 +167,7 @@ async def tenders_page(
         "source": source or "",
         "min_score": min_score,
         "status": status or "",
+        "nhs_software": nhs_software,
         "sort": sort,
         "order": order,
         "categories": categories,
@@ -184,6 +187,34 @@ async def tender_detail(request: Request, tender_id: int):
         "request": request,
         "tender": tender,
     })
+
+
+@app.get("/settings", response_class=HTMLResponse)
+async def settings_page(request: Request):
+    """Settings page to configure Telegram Bot and Chat ID."""
+    bot_token = await get_setting("TELEGRAM_BOT_TOKEN")
+    chat_id = await get_setting("TELEGRAM_CHAT_ID")
+    
+    return templates.TemplateResponse("settings.html", {
+        "request": request,
+        "bot_token": bot_token or "",
+        "chat_id": chat_id or "",
+    })
+
+@app.post("/settings", response_class=RedirectResponse)
+async def update_settings(
+    request: Request,
+    bot_token: str = Form(""),
+    chat_id: str = Form("")
+):
+    """Update settings."""
+    if bot_token:
+        await set_setting("TELEGRAM_BOT_TOKEN", bot_token)
+    if chat_id:
+        await set_setting("TELEGRAM_CHAT_ID", chat_id)
+        
+    # Redirect back to settings page
+    return RedirectResponse(url="/settings", status_code=303)
 
 
 # ─── API Routes ────────────────────────────────────────────────

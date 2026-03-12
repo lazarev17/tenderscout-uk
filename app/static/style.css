@@ -4,23 +4,23 @@
 
 /* ─── CSS Variables ─────────────────────────────────────── */
 :root {
-    --bg-primary: #0a0e1a;
-    --bg-secondary: #111827;
-    --bg-card: rgba(17, 24, 39, 0.7);
-    --bg-card-hover: rgba(30, 41, 59, 0.8);
-    --bg-glass: rgba(255, 255, 255, 0.04);
-    --bg-glass-hover: rgba(255, 255, 255, 0.08);
-    --border: rgba(255, 255, 255, 0.08);
-    --border-hover: rgba(255, 255, 255, 0.15);
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-card: rgba(255, 255, 255, 0.9);
+    --bg-card-hover: rgba(248, 250, 252, 0.95);
+    --bg-glass: rgba(255, 255, 255, 0.7);
+    --bg-glass-hover: rgba(255, 255, 255, 0.95);
+    --border: rgba(15, 23, 42, 0.1);
+    --border-hover: rgba(15, 23, 42, 0.2);
 
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
+    --text-primary: #0f172a;
+    --text-secondary: #334155;
     --text-muted: #64748b;
 
-    --accent: #6366f1;
-    --accent-hover: #818cf8;
-    --accent-glow: rgba(99, 102, 241, 0.3);
-    --accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+    --accent: #4f46e5;
+    --accent-hover: #4338ca;
+    --accent-glow: rgba(79, 70, 229, 0.2);
+    --accent-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%);
 
     --green: #10b981;
     --green-bg: rgba(16, 185, 129, 0.12);
@@ -82,7 +82,7 @@ img { max-width: 100%; }
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(10, 14, 26, 0.85);
+    background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(20px) saturate(180%);
     border-bottom: 1px solid var(--border);
     padding: 0 0;

@@ -129,17 +129,23 @@ async def get_tenders(
     source: Optional[str] = None,
     min_score: Optional[int] = None,
     status: Optional[str] = None,
+    nhs_software: bool = False,
     sort_by: str = "published_at",
     sort_order: str = "DESC",
     page: int = 1,
     per_page: int = 20,
 ) -> tuple[list[dict], int]:
-    """Get tenders with filtering and pagination."""
-    db = await get_db()
-    try:
+    """Get matching tenders with pagination and total count."""
+    async with aiosqlite.connect(DB_PATH) as db:
+        db.row_factory = aiosqlite.Row
+        
         conditions = []
         params = []
-
+        
+        if nhs_software:
+            conditions.append("(buyer LIKE ? OR title LIKE ?) AND category = 'Technology'")
+            params.extend(['%NHS%', '%NHS%'])
+        
         if search:
             conditions.append("(title LIKE ? OR description LIKE ? OR buyer LIKE ?)")
             search_term = f"%{search}%"
@@ -187,8 +193,6 @@ async def get_tenders(
         tenders = [dict(row) for row in rows]
 
         return tenders, total
-    finally:
-        await db.close()
 
 
 async def get_tender_by_id(tender_id: int) -> Optional[dict]:

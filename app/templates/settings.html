@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block nav_settings %}active{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1>Settings</h1>
+        <p>Configure Telegram Notifications and Application Preferences</p>
+    </div>
+</section>
+
+<section class="settings-content" style="padding: 40px 0; max-width: 600px; margin: 0 auto;">
+    <div class="container">
+        <div class="stat-card" style="text-align: left; background: var(--bg-card);">
+            <h2 style="font-size: 1.25rem; margin-bottom: 24px;">Telegram Integration</h2>
+            
+            <form action="/settings" method="POST" style="display: flex; flex-direction: column; gap: 16px;">
+                <div class="filter-group">
+                    <label class="filter-label" for="bot_token">Bot Token</label>
+                    <input type="text" id="bot_token" name="bot_token" class="filter-input" placeholder="e.g. 123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11" value="{{ bot_token }}">
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">Available from <a href="https://t.me/BotFather" target="_blank" style="color: var(--accent);">@BotFather</a></p>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label" for="chat_id">Chat ID</label>
+                    <input type="text" id="chat_id" name="chat_id" class="filter-input" placeholder="e.g. @uktenders or -100123456" value="{{ chat_id }}">
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="margin-top: 12px; width: fit-content;">Save Settings</button>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
