@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TenderScout UK{% endblock %} — UK Government Tender Monitor</title>
+    <meta name="description" content="{% block meta_desc %}Monitor UK government tenders in IT, Healthcare, and Technology. Real-time alerts from Contracts Finder and Find a Tender.{% endblock %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-content">
+            <a href="/" class="nav-brand">
+                <span class="brand-icon">◆</span>
+                <span class="brand-text">TenderScout</span>
+                <span class="brand-tag">UK</span>
+            </a>
+            <div class="nav-links">
+                <a href="/" class="nav-link {% block nav_home %}{% endblock %}">Home</a>
+                <a href="/tenders" class="nav-link {% block nav_tenders %}{% endblock %}">Browse Tenders</a>
+                <a href="/tenders?min_score=6&sort=relevance_score" class="nav-link {% block nav_top %}{% endblock %}">Top Matches</a>
+            </div>
+            <div class="nav-actions">
+                <a href="/tenders?category=Technology" class="btn btn-outline btn-sm">IT Tenders</a>
+                <a href="/tenders?category=Healthcare" class="btn btn-primary btn-sm">Healthcare</a>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <span class="brand-icon">◆</span>
+                    <span class="brand-text">TenderScout</span>
+                    <span class="brand-tag">UK</span>
+                    <p class="footer-desc">Automated UK government tender monitoring for IT and Healthcare sectors.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Data Sources</h4>
+                    <a href="https://www.contractsfinder.service.gov.uk/" target="_blank">Contracts Finder</a>
+                    <a href="https://www.find-tender.service.gov.uk/" target="_blank">Find a Tender</a>
+                </div>
+                <div class="footer-links">
+                    <h4>Sectors</h4>
+                    <a href="/tenders?category=Technology">Technology</a>
+                    <a href="/tenders?category=Healthcare">Healthcare</a>
+                    <a href="/tenders?category=Professional">Professional</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 TenderScout UK. Data sourced from official UK government publications.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/static/app.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

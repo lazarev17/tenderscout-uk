@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Browse Tenders{% endblock %}
+{% block nav_tenders %}active{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div class="container">
+        <h1>Browse Tenders</h1>
+        <p>{{ total }} tenders found{% if search %} for "<strong>{{ search }}</strong>"{% endif %}{% if category %} in
+            <strong>{{ category }}</strong>{% endif %}</p>
+    </div>
+</section>
+
+<section class="tenders-browse">
+    <div class="container">
+        <div class="browse-layout">
+            <!-- Filters Sidebar -->
+            <aside class="filters-panel">
+                <form method="get" action="/tenders" id="filter-form">
+                    <div class="filter-group">
+                        <label class="filter-label">Search</label>
+                        <input type="text" name="search" value="{{ search }}" placeholder="Keywords..."
+                            class="filter-input">
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">Sector</label>
+                        <select name="category" class="filter-select">
+                            <option value="">All Sectors</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat }}" {% if category==cat %}selected{% endif %}>{{ cat }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">Source</label>
+                        <select name="source" class="filter-select">
+                            <option value="">All Sources</option>
+                            <option value="Contracts Finder" {% if source=='Contracts Finder' %}selected{% endif %}>
+                                Contracts Finder</option>
+                            <option value="Find a Tender" {% if source=='Find a Tender' %}selected{% endif %}>Find a
+                                Tender</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">Min Relevance Score</label>
+                        <select name="min_score" class="filter-select">
+                            <option value="">Any</option>
+                            <option value="3" {% if min_score==3 %}selected{% endif %}>3+ (Somewhat relevant)</option>
+                            <option value="6" {% if min_score==6 %}selected{% endif %}>6+ (Relevant)</option>
+                            <option value="9" {% if min_score==9 %}selected{% endif %}>9+ (Highly relevant)</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">Sort By</label>
+                        <select name="sort" class="filter-select">
+                            <option value="published_at" {% if sort=='published_at' %}selected{% endif %}>Date Published
+                            </option>
+                            <option value="relevance_score" {% if sort=='relevance_score' %}selected{% endif %}>
+                                Relevance Score</option>
+                            <option value="budget_amount" {% if sort=='budget_amount' %}selected{% endif %}>Budget
+                            </option>
+                            <option value="deadline" {% if sort=='deadline' %}selected{% endif %}>Deadline</option>
+                        </select>
+                    </div>
+
+                    <input type="hidden" name="order" value="{{ order }}">
+
+                    <button type="submit" class="btn btn-primary btn-full">Apply Filters</button>
+                    <a href="/tenders" class="btn btn-ghost btn-full">Clear All</a>
+                </form>
+            </aside>
+
+            <!-- Tender List -->
+            <div class="tenders-list">
+                {% if tenders %}
+                {% for tender in tenders %}
+                <a href="/tenders/{{ tender.id }}" class="tender-list-item">
+                    <div class="tender-list-header">
+                        <div class="tender-list-badges">
+                            <span class="tender-source {{ tender.source|lower|replace(' ', '-') }}">{{ tender.source
+                                }}</span>
+                            <span class="tender-category-badge">{{ tender.category or 'Other' }}</span>
+                        </div>
+                        <span
+                            class="tender-score score-{{ 'high' if tender.relevance_score >= 9 else 'medium' if tender.relevance_score >= 6 else 'low' }}">
+                            {% if tender.relevance_score >= 9 %}🔥{% elif tender.relevance_score >= 6 %}⭐{% endif %}
+                            {{ tender.relevance_score }}
+                        </span>
+                    </div>
+                    <h3 class="tender-list-title">{{ tender.title|truncate_text(120) }}</h3>
+                    <p class="tender-list-desc">{{ tender.description|truncate_text(200) }}</p>
+                    <div class="tender-list-meta">
+                        <span class="meta-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14"
+                                height="14">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            {{ tender.buyer or 'Unknown' }}
+                        </span>
+                        <span class="meta-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14"
+                                height="14">
+                                <line x1="12" y1="1" x2="12" y2="23" />
+                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                            </svg>
+                            {{ tender.budget_amount|format_budget }}
+                        </span>
+                        {% if tender.deadline %}
+                        <span class="meta-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14"
+                                height="14">
+                                <circle cx="12" cy="12" r="10" />
+                                <polyline points="12 6 12 12 16 14" />
+                            </svg>
+                            {{ tender.deadline[:10] }}
+                        </span>
+                        {% endif %}
+                        {% if tender.published_at %}
+                        <span class="meta-item">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14"
+                                height="14">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                <line x1="16" y1="2" x2="16" y2="6" />
+                                <line x1="8" y1="2" x2="8" y2="6" />
+                                <line x1="3" y1="10" x2="21" y2="10" />
+                            </svg>
+                            Published: {{ tender.published_at[:10] }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+
+                <!-- Pagination -->
+                {% if total_pages > 1 %}
+                <div class="pagination">
+                    {% if page > 1 %}
+                    <a href="?search={{ search }}&category={{ category }}&source={{ source }}&min_score={{ min_score or '' }}&sort={{ sort }}&order={{ order }}&page={{ page - 1 }}"
+                        class="page-btn">← Previous</a>
+                    {% endif %}
+
+                    <div class="page-info">
+                        Page {{ page }} of {{ total_pages }}
+                    </div>
+
+                    {% if page < total_pages %} <a
+                        href="?search={{ search }}&category={{ category }}&source={{ source }}&min_score={{ min_score or '' }}&sort={{ sort }}&order={{ order }}&page={{ page + 1 }}"
+                        class="page-btn">Next →</a>
+                        {% endif %}
+                </div>
+                {% endif %}
+
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">🔍</div>
+                    <h3>No tenders found</h3>
+                    <p>Try adjusting your filters or search terms. The system crawls new tenders every hour.</p>
+                    <a href="/tenders" class="btn btn-primary">Clear Filters</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

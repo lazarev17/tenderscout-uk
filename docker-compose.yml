@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  tenderscout:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - tender_data:/app/data
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+    restart: unless-stopped
+
+volumes:
+  tender_data:

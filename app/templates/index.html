@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block nav_home %}active{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-bg-effects">
+        <div class="hero-orb hero-orb-1"></div>
+        <div class="hero-orb hero-orb-2"></div>
+        <div class="hero-orb hero-orb-3"></div>
+    </div>
+    <div class="container hero-content">
+        <div class="hero-badge">🇬🇧 UK Government Tenders</div>
+        <h1 class="hero-title">
+            Find <span class="gradient-text">IT & Healthcare</span><br>
+            Government Contracts
+        </h1>
+        <p class="hero-subtitle">
+            Automated monitoring of UK public sector tenders from Contracts Finder
+            and Find a Tender. Scored for relevance to software and health-tech companies.
+        </p>
+        <form class="hero-search" action="/tenders" method="get">
+            <div class="search-box">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <path d="m21 21-4.35-4.35" />
+                </svg>
+                <input type="text" name="search" placeholder="Search tenders... e.g. 'digital platform NHS'"
+                    class="search-input" id="hero-search">
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+        </form>
+        <div class="hero-quick-links">
+            <span>Popular:</span>
+            <a href="/tenders?search=software+development">Software Development</a>
+            <a href="/tenders?search=NHS+digital">NHS Digital</a>
+            <a href="/tenders?search=cloud+services">Cloud Services</a>
+            <a href="/tenders?search=AI+machine+learning">AI / ML</a>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" data-count="{{ stats.total }}">{{ stats.total }}</div>
+                <div class="stat-label">Total Tenders</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" data-count="{{ stats.active }}">{{ stats.active }}</div>
+                <div class="stat-label">Active Opportunities</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" data-count="{{ stats.high_relevance }}">{{ stats.high_relevance }}</div>
+                <div class="stat-label">High Relevance</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" data-count="{{ stats.sources }}">{{ stats.sources }}</div>
+                <div class="stat-label">Data Sources</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sectors Section -->
+<section class="sectors-section">
+    <div class="container">
+        <div class="section-header">
+            <h2>Browse by Sector</h2>
+            <p>Find contracts in your industry</p>
+        </div>
+        <div class="sectors-grid">
+            <a href="/tenders?category=Technology" class="sector-card sector-tech">
+                <div class="sector-icon">💻</div>
+                <h3>Technology</h3>
+                <p>IT services, software development, cloud & digital</p>
+                <span class="sector-arrow">→</span>
+            </a>
+            <a href="/tenders?category=Healthcare" class="sector-card sector-health">
+                <div class="sector-icon">🏥</div>
+                <h3>Healthcare</h3>
+                <p>NHS, health tech, clinical systems & medical</p>
+                <span class="sector-arrow">→</span>
+            </a>
+            <a href="/tenders?category=Professional" class="sector-card sector-pro">
+                <div class="sector-icon">💼</div>
+                <h3>Professional</h3>
+                <p>Consulting, advisory & management services</p>
+                <span class="sector-arrow">→</span>
+            </a>
+            <a href="/tenders?category=Construction" class="sector-card sector-construct">
+                <div class="sector-icon">🏗️</div>
+                <h3>Construction</h3>
+                <p>Building, infrastructure & facilities</p>
+                <span class="sector-arrow">→</span>
+            </a>
+            <a href="/tenders?category=Education" class="sector-card sector-edu">
+                <div class="sector-icon">🎓</div>
+                <h3>Education</h3>
+                <p>Training, learning platforms & education</p>
+                <span class="sector-arrow">→</span>
+            </a>
+            <a href="/tenders?category=Research" class="sector-card sector-research">
+                <div class="sector-icon">🔬</div>
+                <h3>Research</h3>
+                <p>R&D, scientific & laboratory services</p>
+                <span class="sector-arrow">→</span>
+            </a>
+            <a href="/tenders?category=Security" class="sector-card sector-security">
+                <div class="sector-icon">🔒</div>
+                <h3>Security</h3>
+                <p>Cyber security, defence & safety services</p>
+                <span class="sector-arrow">→</span>
+            </a>
+            <a href="/tenders?category=Environment" class="sector-card sector-env">
+                <div class="sector-icon">🌿</div>
+                <h3>Environment</h3>
+                <p>Sustainability, waste & environmental services</p>
+                <span class="sector-arrow">→</span>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Tenders -->
+<section class="tenders-preview">
+    <div class="container">
+        <div class="section-header">
+            <h2>Latest Tenders</h2>
+            <a href="/tenders" class="btn btn-outline">View All →</a>
+        </div>
+        {% if recent_tenders %}
+        <div class="tender-grid">
+            {% for tender in recent_tenders %}
+            <a href="/tenders/{{ tender.id }}" class="tender-card">
+                <div class="tender-card-header">
+                    <span class="tender-source {{ tender.source|lower|replace(' ', '-') }}">{{ tender.source }}</span>
+                    <span
+                        class="tender-score score-{{ 'high' if tender.relevance_score >= 9 else 'medium' if tender.relevance_score >= 6 else 'low' }}">
+                        {{ tender.relevance_score }}
+                    </span>
+                </div>
+                <h3 class="tender-title">{{ tender.title|truncate_text(80) }}</h3>
+                <p class="tender-buyer">{{ tender.buyer or 'Unknown buyer' }}</p>
+                <div class="tender-meta">
+                    <span class="tender-budget">{{ tender.budget_amount|format_budget }}</span>
+                    <span class="tender-category">{{ tender.category or 'Other' }}</span>
+                </div>
+                {% if tender.deadline %}
+                <div class="tender-deadline">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    Deadline: {{ tender.deadline[:10] }}
+                </div>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📡</div>
+            <h3>Loading tenders...</h3>
+            <p>The system is currently fetching tenders from UK government sources. This may take a minute on first
+                load.</p>
+            <button onclick="location.reload()" class="btn btn-primary">Refresh</button>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Top Matches -->
+{% if top_tenders %}
+<section class="tenders-preview top-matches">
+    <div class="container">
+        <div class="section-header">
+            <h2>🔥 Top IT & Healthcare Matches</h2>
+            <a href="/tenders?min_score=6&sort=relevance_score" class="btn btn-outline">View All →</a>
+        </div>
+        <div class="tender-grid">
+            {% for tender in top_tenders %}
+            <a href="/tenders/{{ tender.id }}" class="tender-card featured">
+                <div class="tender-card-header">
+                    <span class="tender-source {{ tender.source|lower|replace(' ', '-') }}">{{ tender.source }}</span>
+                    <span
+                        class="tender-score score-{{ 'high' if tender.relevance_score >= 9 else 'medium' if tender.relevance_score >= 6 else 'low' }}">
+                        🔥 {{ tender.relevance_score }}
+                    </span>
+                </div>
+                <h3 class="tender-title">{{ tender.title|truncate_text(80) }}</h3>
+                <p class="tender-buyer">{{ tender.buyer or 'Unknown buyer' }}</p>
+                <div class="tender-meta">
+                    <span class="tender-budget">{{ tender.budget_amount|format_budget }}</span>
+                    <span class="tender-category">{{ tender.category or 'Other' }}</span>
+                </div>
+                {% if tender.deadline %}
+                <div class="tender-deadline">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    Deadline: {{ tender.deadline[:10] }}
+                </div>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
