@@ -85,6 +85,8 @@ def parse_ocds_release(release: dict, source: str) -> Optional[dict]:
             cpv_description = classification.get("description")
 
         # Source URL
+        source_url = ""
+        ocid = release.get("ocid", "")
         if source == "Contracts Finder":
             # OCID format: ocds-b5fd17-GUID
             # URL: https://www.contractsfinder.service.gov.uk/Notice/GUID
