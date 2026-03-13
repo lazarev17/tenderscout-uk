@@ -131,18 +131,28 @@ async def tenders_page(
     min_score: Optional[int] = Query(None),
     status: Optional[str] = Query(None),
     nhs_software: bool = Query(False),
+    is_sme_friendly: bool = Query(False),
+    location: Optional[str] = Query(None),
     sort: str = Query("published_at"),
     order: str = Query("DESC"),
     page: int = Query(1, ge=1),
 ):
     """Tender listing page with search and filters."""
+    # Handle empty string from form for min_score
+    try:
+        numeric_min_score = int(min_score) if min_score and str(min_score).isdigit() else None
+    except (ValueError, TypeError):
+        numeric_min_score = None
+
     tenders, total = await get_tenders(
         search=search,
         category=category,
         source=source,
-        min_score=min_score,
+        min_score=numeric_min_score,
         status=status,
         nhs_software=nhs_software,
+        is_sme_friendly=is_sme_friendly,
+        location=location,
         sort_by=sort,
         sort_order=order,
         page=page,
@@ -168,6 +178,8 @@ async def tenders_page(
         "min_score": min_score,
         "status": status or "",
         "nhs_software": nhs_software,
+        "is_sme_friendly": is_sme_friendly,
+        "location": location or "",
         "sort": sort,
         "order": order,
         "categories": categories,

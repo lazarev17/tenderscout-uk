@@ -24,6 +24,19 @@
                     </div>
 
                     <div class="filter-group">
+                        <label class="filter-label">Location</label>
+                        <input type="text" name="location" value="{{ location }}" placeholder="UK, London, etc..."
+                            class="filter-input">
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; text-transform: none; font-size: 0.85rem; color: var(--text-primary);">
+                            <input type="checkbox" name="is_sme_friendly" value="true" {% if is_sme_friendly %}checked{% endif %} style="width: 16px; height: 16px; cursor: pointer;">
+                            Suitable for SMEs
+                        </label>
+                    </div>
+
+                    <div class="filter-group">
                         <label class="filter-label">Sector</label>
                         <select name="category" class="filter-select">
                             <option value="">All Sectors</option>
@@ -48,9 +61,9 @@
                         <label class="filter-label">Min Relevance Score</label>
                         <select name="min_score" class="filter-select">
                             <option value="">Any</option>
-                            <option value="3" {% if min_score==3 %}selected{% endif %}>3+ (Somewhat relevant)</option>
-                            <option value="6" {% if min_score==6 %}selected{% endif %}>6+ (Relevant)</option>
-                            <option value="9" {% if min_score==9 %}selected{% endif %}>9+ (Highly relevant)</option>
+                            <option value="3" {% if min_score|int == 3 %}selected{% endif %}>3+ (Somewhat relevant)</option>
+                            <option value="6" {% if min_score|int == 6 %}selected{% endif %}>6+ (Relevant)</option>
+                            <option value="9" {% if min_score|int == 9 %}selected{% endif %}>9+ (Highly relevant)</option>
                         </select>
                     </div>
 
@@ -84,6 +97,12 @@
                             <span class="tender-source {{ tender.source|lower|replace(' ', '-') }}">{{ tender.source
                                 }}</span>
                             <span class="tender-category-badge">{{ tender.category or 'Other' }}</span>
+                            {% if tender.is_sme_friendly or 'sme' in (tender.title|lower) %}
+                                <span class="tender-category-badge" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">✅ SME Friendly</span>
+                            {% endif %}
+                            {% if tender.location %}
+                                <span class="tender-category-badge" style="background: rgba(148, 163, 184, 0.12);">📍 {{ tender.location }}</span>
+                            {% endif %}
                         </div>
                         <span
                             class="tender-score score-{{ 'high' if tender.relevance_score >= 9 else 'medium' if tender.relevance_score >= 6 else 'low' }}">
@@ -136,11 +155,10 @@
                 </a>
                 {% endfor %}
 
-                <!-- Pagination -->
                 {% if total_pages > 1 %}
                 <div class="pagination">
                     {% if page > 1 %}
-                    <a href="?search={{ search }}&category={{ category }}&source={{ source }}&min_score={{ min_score or '' }}&sort={{ sort }}&order={{ order }}&page={{ page - 1 }}"
+                    <a href="?search={{ search }}&category={{ category }}&source={{ source }}&min_score={{ min_score or '' }}&location={{ location }}&is_sme_friendly={{ 'true' if is_sme_friendly else '' }}&sort={{ sort }}&order={{ order }}&page={{ page - 1 }}"
                         class="page-btn">← Previous</a>
                     {% endif %}
 
@@ -149,7 +167,7 @@
                     </div>
 
                     {% if page < total_pages %} <a
-                        href="?search={{ search }}&category={{ category }}&source={{ source }}&min_score={{ min_score or '' }}&sort={{ sort }}&order={{ order }}&page={{ page + 1 }}"
+                        href="?search={{ search }}&category={{ category }}&source={{ source }}&min_score={{ min_score or '' }}&location={{ location }}&is_sme_friendly={{ 'true' if is_sme_friendly else '' }}&sort={{ sort }}&order={{ order }}&page={{ page + 1 }}"
                         class="page-btn">Next →</a>
                         {% endif %}
                 </div>

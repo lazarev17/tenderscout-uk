@@ -5,8 +5,8 @@ from typing import Optional
 
 # IT / Software keywords
 IT_KEYWORDS = [
-    "software development", "software engineering", "digital platform",
-    "digital service", "digital transformation", "it services",
+    "it services", "software development", "software engineering", "digital platform",
+    "digital service", "digital transformation",
     "information technology", "ict", "saas", "cloud services",
     "cloud computing", "data platform", "data analytics",
     "artificial intelligence", "machine learning", "ai ", " ai,",
@@ -20,11 +20,12 @@ IT_KEYWORDS = [
 
 # Healthcare keywords
 HEALTH_KEYWORDS = [
+    "healthcare software", "digital health", "clinical systems", "ehr", "medical software",
     "healthcare", "health care", "health service",
     "nhs", "national health service", "patient system",
-    "patient management", "electronic health record", "ehr",
+    "patient management", "electronic health record",
     "electronic patient record", "epr", "clinical system",
-    "clinical software", "medical software", "medical device",
+    "medical device",
     "telemedicine", "telehealth", "remote care",
     "health informatics", "health tech", "healthtech",
     "pharmacy", "pharmaceutical", "mental health",

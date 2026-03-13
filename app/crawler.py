@@ -124,6 +124,15 @@ def parse_ocds_release(release: dict, source: str) -> Optional[dict]:
                     location = addr.get("locality", "") or addr.get("countryName", "")
                     break
 
+        # SME Friendly
+        is_sme_friendly = False
+        if tender_data.get("smeFriendly"):
+            is_sme_friendly = True
+        elif tender_data.get("suitability", {}).get("sme"):
+            is_sme_friendly = True
+        elif "sme" in title.lower() or "sme" in description.lower() or "small and medium" in description.lower():
+            is_sme_friendly = True
+
         # Calculate relevance score
         relevance_score = calculate_relevance_score(
             title=title,
@@ -154,6 +163,7 @@ def parse_ocds_release(release: dict, source: str) -> Optional[dict]:
             "cpv_description": cpv_description,
             "location": location,
             "procurement_method": tender_data.get("procurementMethodDetails", ""),
+            "is_sme_friendly": is_sme_friendly,
         }
 
     except Exception as e:

@@ -41,7 +41,8 @@ async def init_db():
                 location TEXT,
                 procurement_method TEXT,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-                notified INTEGER DEFAULT 0
+                notified INTEGER DEFAULT 0,
+                is_sme_friendly INTEGER DEFAULT 0
             )
         """)
         await db.execute("""
@@ -55,6 +56,13 @@ async def init_db():
         await db.execute("""
             CREATE INDEX IF NOT EXISTS idx_tenders_category
             ON tenders(category)
+        """)
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS settings (
+                key TEXT PRIMARY KEY,
+                value TEXT,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
         """)
         await db.commit()
     finally:
@@ -80,7 +88,7 @@ async def upsert_tender(tender: dict) -> bool:
                     published_at = ?, relevance_score = ?,
                     status = ?, category = ?, cpv_code = ?,
                     cpv_description = ?, location = ?,
-                    procurement_method = ?
+                    procurement_method = ?, is_sme_friendly = ?
                 WHERE ocid = ?
             """, (
                 tender.get("title"), tender.get("description"),
@@ -91,7 +99,7 @@ async def upsert_tender(tender: dict) -> bool:
                 tender.get("relevance_score", 0), tender.get("status", "open"),
                 tender.get("category"), tender.get("cpv_code"),
                 tender.get("cpv_description"), tender.get("location"),
-                tender.get("procurement_method"), tender["ocid"]
+                tender.get("procurement_method"), tender.get("is_sme_friendly", 0), tender["ocid"]
             ))
             await db.commit()
             return False
@@ -103,8 +111,8 @@ async def upsert_tender(tender: dict) -> bool:
                     source, source_url, published_at,
                     relevance_score, status, category,
                     cpv_code, cpv_description, location,
-                    procurement_method
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    procurement_method, is_sme_friendly
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 tender["ocid"], tender.get("title"),
                 tender.get("description"), tender.get("buyer"),
@@ -115,7 +123,8 @@ async def upsert_tender(tender: dict) -> bool:
                 tender.get("relevance_score", 0),
                 tender.get("status", "open"), tender.get("category"),
                 tender.get("cpv_code"), tender.get("cpv_description"),
-                tender.get("location"), tender.get("procurement_method")
+                tender.get("location"), tender.get("procurement_method"),
+                tender.get("is_sme_friendly", 0)
             ))
             await db.commit()
             return True
@@ -130,6 +139,8 @@ async def get_tenders(
     min_score: Optional[int] = None,
     status: Optional[str] = None,
     nhs_software: bool = False,
+    is_sme_friendly: bool = False,
+    location: Optional[str] = None,
     sort_by: str = "published_at",
     sort_order: str = "DESC",
     page: int = 1,
@@ -150,6 +161,13 @@ async def get_tenders(
             conditions.append("(title LIKE ? OR description LIKE ? OR buyer LIKE ?)")
             search_term = f"%{search}%"
             params.extend([search_term, search_term, search_term])
+            
+        if is_sme_friendly:
+            conditions.append("is_sme_friendly = 1")
+            
+        if location:
+            conditions.append("location LIKE ?")
+            params.append(f"%{location}%")
 
         if category:
             conditions.append("category = ?")
@@ -275,3 +293,28 @@ async def mark_as_notified(tender_ids: list[int]):
         await db.commit()
     finally:
         await db.close()
+
+
+async def get_setting(key: str) -> Optional[str]:
+    """Get a setting by key."""
+    db = await get_db()
+    try:
+        cursor = await db.execute("SELECT value FROM settings WHERE key = ?", (key,))
+        row = await cursor.fetchone()
+        return row[0] if row else None
+    finally:
+        await db.close()
+
+
+async def set_setting(key: str, value: str):
+    """Set a setting value."""
+    db = await get_db()
+    try:
+        await db.execute("""
+            INSERT INTO settings (key, value) VALUES (?, ?)
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP
+        """, (key, value))
+        await db.commit()
+    finally:
+        await db.close()
+
