@@ -171,63 +171,74 @@ async def crawl_contracts_finder(days_back: int = 3) -> list[dict]:
     published_to = now.strftime("%Y-%m-%dT23:59:59Z")
 
     new_tenders = []
-    page = 1
+    
+    # We will query specifically for the most relevant CPV codes to ensure dense, targeted results
+    target_cpvs = [
+        "72", # IT Services
+        "48", # Software
+        "85", # Health Services
+        "33", # Medical Equipment
+        "64", # Telecommunications
+        "30", # Office and computing machinery
+    ]
 
     async with httpx.AsyncClient(timeout=60.0) as client:
-        while True:
-            params = {
-                "publishedFrom": published_from,
-                "publishedTo": published_to,
-                "limit": 100,
-                "stages": "tender,planning",
-            }
+        for cpv in target_cpvs:
+            page = 1
+            while True:
+                params = {
+                    "publishedFrom": published_from,
+                    "publishedTo": published_to,
+                    "limit": 100,
+                    "stages": "tender,planning",
+                    "cpvCodes": cpv
+                }
 
-            try:
-                logger.info(f"Fetching Contracts Finder page {page}...")
-                resp = await client.get(CF_BASE_URL, params=params)
-                resp.raise_for_status()
-                data = resp.json()
-            except Exception as e:
-                logger.error(f"Error fetching Contracts Finder: {e}")
-                break
-
-            releases = data.get("releases", [])
-            if not releases:
-                break
-
-            for release in releases:
-                tender = parse_ocds_release(release, "Contracts Finder")
-                if tender:
-                    is_new = await upsert_tender(tender)
-                    if is_new:
-                        new_tenders.append(tender)
-
-            # Check for next page link
-            links = data.get("links", {})
-            next_url = links.get("next")
-            if next_url:
-                # Follow pagination
                 try:
-                    resp = await client.get(next_url)
+                    logger.info(f"Fetching Contracts Finder (CPV {cpv}) page {page}...")
+                    resp = await client.get(CF_BASE_URL, params=params)
                     resp.raise_for_status()
                     data = resp.json()
-                    releases = data.get("releases", [])
-                    if not releases:
-                        break
-                    for release in releases:
-                        tender = parse_ocds_release(release, "Contracts Finder")
-                        if tender:
-                            is_new = await upsert_tender(tender)
-                            if is_new:
-                                new_tenders.append(tender)
-                    page += 1
-                    if page > 10:  # Safety limit
-                        break
                 except Exception as e:
-                    logger.error(f"Error following pagination: {e}")
+                    logger.error(f"Error fetching Contracts Finder CPV {cpv}: {e}")
                     break
-            else:
-                break
+
+                releases = data.get("releases", [])
+                if not releases:
+                    break
+
+                for release in releases:
+                    tender = parse_ocds_release(release, "Contracts Finder")
+                    if tender:
+                        is_new = await upsert_tender(tender)
+                        if is_new:
+                            new_tenders.append(tender)
+
+                # Check for next page link
+                links = data.get("links", {})
+                next_url = links.get("next")
+                if next_url:
+                    try:
+                        resp = await client.get(next_url)
+                        resp.raise_for_status()
+                        data = resp.json()
+                        releases = data.get("releases", [])
+                        if not releases:
+                            break
+                        for release in releases:
+                            tender = parse_ocds_release(release, "Contracts Finder")
+                            if tender:
+                                is_new = await upsert_tender(tender)
+                                if is_new:
+                                    new_tenders.append(tender)
+                        page += 1
+                        if page > 10:  # Safety limit
+                            break
+                    except Exception as e:
+                        logger.error(f"Error following pagination: {e}")
+                        break
+                else:
+                    break
 
     logger.info(f"Contracts Finder: found {len(new_tenders)} new tenders")
     return new_tenders
@@ -244,32 +255,43 @@ async def crawl_find_a_tender(days_back: int = 3) -> list[dict]:
 
     new_tenders = []
 
+    target_cpvs = ("72", "48", "85", "33", "64", "30")
+    
+    # Fetch more data since we have to filter locally
     async with httpx.AsyncClient(timeout=60.0) as client:
-        params = {
-            "updatedFrom": updated_from,
-            "updatedTo": updated_to,
-        }
+        page_url = f"{FTS_BASE_URL}?updatedFrom={updated_from}&updatedTo={updated_to}"
+        pages_fetched = 0
+        
+        while page_url and pages_fetched < 10:  # Fetch up to 10 pages locally to find enough matches
+            try:
+                logger.info(f"Fetching Find a Tender data (page {pages_fetched + 1})...")
+                resp = await client.get(page_url)
+                resp.raise_for_status()
+                data = resp.json()
+            except Exception as e:
+                logger.error(f"Error fetching Find a Tender: {e}")
+                break
 
-        try:
-            logger.info("Fetching Find a Tender data...")
-            resp = await client.get(FTS_BASE_URL, params=params)
-            resp.raise_for_status()
-            data = resp.json()
-        except Exception as e:
-            logger.error(f"Error fetching Find a Tender: {e}")
-            return new_tenders
+            releases = data.get("releases", [])
+            logger.info(f"Find a Tender: got {len(releases)} releases on this page")
 
-        releases = data.get("releases", [])
-        logger.info(f"Find a Tender: got {len(releases)} releases")
+            for release in releases:
+                tender = parse_ocds_release(release, "Find a Tender")
+                if tender:
+                    # Strict local filtering since the API doesn't support cpvCodes filtering natively
+                    # Only save it if the CPV code matches our Software/Healthcare targets
+                    cpv = tender.get("cpv_code")
+                    if cpv and str(cpv).startswith(target_cpvs):
+                        is_new = await upsert_tender(tender)
+                        if is_new:
+                            new_tenders.append(tender)
+                            
+            # Pagination
+            links = data.get("links", {})
+            page_url = links.get("next")
+            pages_fetched += 1
 
-        for release in releases:
-            tender = parse_ocds_release(release, "Find a Tender")
-            if tender:
-                is_new = await upsert_tender(tender)
-                if is_new:
-                    new_tenders.append(tender)
-
-    logger.info(f"Find a Tender: found {len(new_tenders)} new tenders")
+    logger.info(f"Find a Tender: found {len(new_tenders)} relevant new tenders")
     return new_tenders
 
 
