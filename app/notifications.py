@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 async def get_telegram_config():
     """Get Telegram config from database settings."""
-    token = await get_setting("telegram_bot_token")
-    chat_id = await get_setting("telegram_chat_id")
+    token = await get_setting("TELEGRAM_BOT_TOKEN")
+    chat_id = await get_setting("TELEGRAM_CHAT_ID")
     return token or "", chat_id or ""
 
 
@@ -97,8 +97,11 @@ async def send_batch_notifications(tenders: list[dict]) -> int:
         logger.warning("Telegram credentials not configured.")
         return 0
 
+    import asyncio
     sent = 0
-    for tender in tenders:
+    for i, tender in enumerate(tenders):
+        if i > 0:
+            await asyncio.sleep(1.0) # Rate limit: 1 msg/sec
         success = await send_telegram_notification(tender)
         if success:
             sent += 1
