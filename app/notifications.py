@@ -64,6 +64,20 @@ def format_tender_message(tender: dict) -> str:
 
 async def send_telegram_notification(tender: dict) -> bool:
     """Send a single tender notification via Telegram."""
+    # 1. Strict Link Check
+    source_url = tender.get("source_url", "")
+    if not source_url or "ocds-" in source_url:
+        logger.info(f"Skipping tender with broken or missing URL: {tender.get('title', '')}")
+        return False
+
+    # 2. 'Value' Check
+    budget = tender.get("budget_amount", 0) or 0
+    score = tender.get("relevance_score", 0) or 0
+    # Must have a budget OR be extremely high relevance (>= 15) to be considered "having value"
+    if budget <= 0 and score < 15:
+        logger.info(f"Skipping tender with low 'value' (0 budget & score {score}): {tender.get('title', '')}")
+        return False
+
     token, chat_id = await get_telegram_config()
     if not token or not chat_id:
         logger.warning("Telegram credentials not configured. Skipping notification.")

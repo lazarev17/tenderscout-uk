@@ -100,15 +100,16 @@ def parse_ocds_release(release: dict, source: str) -> Optional[dict]:
                 if notice_id:
                     source_url = f"https://www.contractsfinder.service.gov.uk/Notice/{notice_id}"
         elif source == "Find a Tender":
-            # For FTS, the 'id' field in the release is the human-readable identifier (e.g. 023135-2026)
+            # For FTS, the 'id' field in the release is the human-readable identifier (e.g. 023135-2024)
+            # We MUST use this ID. If it's missing or looks like an OCID (starts with ocds-), we skip constructing the link
+            # as the OCID suffix is often not sufficient for a direct /Notice/ URL.
             notice_id = release.get("id", "")
-            if notice_id:
+            if notice_id and not notice_id.startswith("ocds-"):
                 source_url = f"https://www.find-tender.service.gov.uk/Notice/{notice_id}"
             else:
-                # Fallback to OCID suffix
-                parts = ocid.split("-")
-                if len(parts) > 2:
-                    source_url = f"https://www.find-tender.service.gov.uk/Notice/{parts[-1]}"
+                # If we don't have a valid human-readable ID, we leave source_url empty
+                # We do NOT fallback to OCID as per user strict requirement.
+                source_url = ""
 
         # Location
         location = ""
