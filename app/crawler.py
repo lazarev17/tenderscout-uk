@@ -85,25 +85,29 @@ def parse_ocds_release(release: dict, source: str) -> Optional[dict]:
             cpv_description = classification.get("description")
 
         # Source URL
-        source_url = ""
-        ocid = release.get("ocid", "")
         if source == "Contracts Finder":
-            # Build URL from the notice documents
-            awards = release.get("awards", [])
-            for award in awards:
-                for doc in award.get("documents", []):
-                    if doc.get("documentType") == "awardNotice":
-                        source_url = doc.get("url", "")
-                        break
+            # Build URL from the notice documents or construct from ID
+            notice_id = release.get("id", "").split("-")[0] if release.get("id") else ""
+            if notice_id:
+                source_url = f"https://www.contractsfinder.service.gov.uk/Notice/{notice_id}"
+            
             if not source_url:
-                # Fallback: construct URL from OCID
-                notice_id = release.get("id", "").split("-")[0] if release.get("id") else ""
-                if notice_id:
-                    source_url = f"https://www.contractsfinder.service.gov.uk/Notice/{notice_id}"
+                awards = release.get("awards", [])
+                for award in awards:
+                    for doc in award.get("documents", []):
+                        if doc.get("url", ""):
+                            source_url = doc.get("url", "")
+                            break
         elif source == "Find a Tender":
             if ocid:
-                notice_id = ocid.replace("ocds-b5fd17-", "")
+                # OCID format: ocds-b5fd17-PUBLISHED_ID
+                notice_id = ocid.split("-")[-1]
                 source_url = f"https://www.find-tender.service.gov.uk/Notice/{notice_id}"
+            if not source_url:
+                # Try from identifier
+                identifier = tender_data.get("id", "")
+                if identifier:
+                    source_url = f"https://www.find-tender.service.gov.uk/Notice/{identifier}"
 
         # Location
         location = ""
