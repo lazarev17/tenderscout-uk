@@ -128,7 +128,7 @@ async def tenders_page(
     search: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
     source: Optional[str] = Query(None),
-    min_score: Optional[int] = Query(None),
+    min_score: Optional[str] = Query(None),
     status: Optional[str] = Query(None),
     nhs_software: bool = Query(False),
     is_sme_friendly: bool = Query(False),
