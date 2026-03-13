@@ -86,28 +86,27 @@ def parse_ocds_release(release: dict, source: str) -> Optional[dict]:
 
         # Source URL
         if source == "Contracts Finder":
-            # Build URL from the notice documents or construct from ID
-            notice_id = release.get("id", "").split("-")[0] if release.get("id") else ""
-            if notice_id:
+            # OCID format: ocds-b5fd17-GUID
+            # URL: https://www.contractsfinder.service.gov.uk/Notice/GUID
+            parts = ocid.split("-", 2)
+            if len(parts) > 2:
+                notice_id = parts[2]
                 source_url = f"https://www.contractsfinder.service.gov.uk/Notice/{notice_id}"
-            
-            if not source_url:
-                awards = release.get("awards", [])
-                for award in awards:
-                    for doc in award.get("documents", []):
-                        if doc.get("url", ""):
-                            source_url = doc.get("url", "")
-                            break
+            else:
+                # Fallback to the human-readable ID if available
+                notice_id = release.get("id", "").split("-")[0]
+                if notice_id:
+                    source_url = f"https://www.contractsfinder.service.gov.uk/Notice/{notice_id}"
         elif source == "Find a Tender":
-            if ocid:
-                # OCID format: ocds-b5fd17-PUBLISHED_ID
-                notice_id = ocid.split("-")[-1]
+            # For FTS, the 'id' field in the release is the human-readable identifier (e.g. 023135-2026)
+            notice_id = release.get("id", "")
+            if notice_id:
                 source_url = f"https://www.find-tender.service.gov.uk/Notice/{notice_id}"
-            if not source_url:
-                # Try from identifier
-                identifier = tender_data.get("id", "")
-                if identifier:
-                    source_url = f"https://www.find-tender.service.gov.uk/Notice/{identifier}"
+            else:
+                # Fallback to OCID suffix
+                parts = ocid.split("-")
+                if len(parts) > 2:
+                    source_url = f"https://www.find-tender.service.gov.uk/Notice/{parts[-1]}"
 
         # Location
         location = ""
