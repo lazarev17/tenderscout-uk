@@ -161,7 +161,7 @@ async def tenders_page(
     total_pages = max(1, (total + 19) // 20)
 
     categories = [
-        "Technology", "Healthcare", "Construction", "Professional",
+        "HealthTech", "Technology", "Healthcare", "Construction", "Professional",
         "Engineering", "Education", "Transport", "Environment",
         "Security", "Research", "Facility", "Other"
     ]

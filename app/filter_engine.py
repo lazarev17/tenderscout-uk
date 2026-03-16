@@ -34,6 +34,15 @@ HEALTH_KEYWORDS = [
     "gp system", "primary care", "secondary care",
 ]
 
+# Combined Healthcare + Software keywords
+HEALTHTECH_KEYWORDS = [
+    "clinical software", "medical software", "healthcare technology", "health tech",
+    "digital medicine", "electronic patient record", "clinical system",
+    "healthcare informatics", "digital transformation in healthcare",
+    "nhs digital", "nhs x", "remote patient monitoring",
+    "care orchestration", "clinical decision support",
+]
+
 # NHS and health-related buyers
 NHS_BUYER_PATTERNS = [
     r"nhs", r"national health", r"health authority",
@@ -81,6 +90,14 @@ def classify_category(cpv_code: Optional[str], title: str = "", description: str
 
     # Fallback: keyword-based classification
     text = f"{title} {description}".lower()
+    
+    # Priority: Both Software and Healthcare = HealthTech
+    has_it = any(kw in text for kw in IT_KEYWORDS[:15])
+    has_health = any(kw in text for kw in HEALTH_KEYWORDS[:15])
+    
+    if (has_it and has_health) or any(kw in text for kw in HEALTHTECH_KEYWORDS):
+        return "HealthTech"
+        
     for kw in IT_KEYWORDS[:10]:
         if kw in text:
             return "Technology"
@@ -147,6 +164,12 @@ def calculate_relevance_score(
             score += 3
         elif prefix in ("85", "33"):  # Health-related CPV
             score += 3
+
+    # Software + Healthcare OVERLAP BONUS (The user's specific request)
+    if it_matches > 0 and health_matches > 0:
+        score += 10 # Massive boost for the overlap
+    elif any(kw in text for kw in HEALTHTECH_KEYWORDS):
+        score += 8
 
     return score
 
