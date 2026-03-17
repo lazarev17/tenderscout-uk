@@ -145,6 +145,7 @@ async def get_tenders(
     sort_order: str = "DESC",
     page: int = 1,
     per_page: int = 20,
+    days_back: Optional[int] = None,
 ) -> tuple[list[dict], int]:
     """Get matching tenders with pagination and total count."""
     async with aiosqlite.connect(DB_PATH) as db:
@@ -152,6 +153,12 @@ async def get_tenders(
         
         conditions = []
         params = []
+
+        if days_back:
+            from datetime import timedelta
+            date_threshold = (datetime.now() - timedelta(days=days_back)).strftime("%Y-%m-%d")
+            conditions.append("published_at >= ?")
+            params.append(date_threshold)
         
         if nhs_software:
             conditions.append("(buyer LIKE ? OR title LIKE ?) AND category = 'Technology'")

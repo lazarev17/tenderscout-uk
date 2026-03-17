@@ -186,6 +186,31 @@ async def tenders_page(
     })
 
 
+@app.get("/healthtech-monthly", response_class=HTMLResponse)
+async def healthtech_monthly_page(
+    request: Request,
+    page: int = Query(1, ge=1),
+):
+    """Specialized page for Software + Healthcare tenders from the last 30 days."""
+    tenders, total = await get_tenders(
+        category="HealthTech",
+        days_back=30, # We'll ensure get_tenders supports this or filter by date
+        sort_by="published_at",
+        sort_order="DESC",
+        page=page,
+        per_page=50, # Show more per page for the monthly summary
+    )
+    total_pages = max(1, (total + 49) // 50)
+
+    return templates.TemplateResponse("healthtech_monthly.html", {
+        "request": request,
+        "tenders": tenders,
+        "total": total,
+        "page": page,
+        "total_pages": total_pages,
+    })
+
+
 @app.get("/tenders/{tender_id}", response_class=HTMLResponse)
 async def tender_detail(request: Request, tender_id: int):
     """Tender detail page."""

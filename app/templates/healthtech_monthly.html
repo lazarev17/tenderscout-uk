@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+{% block title %}HealthTech Monthly Summary - TenderScout UK{% endblock %}
+
+{% block content %}
+<div class="container py-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div>
+            <nav class="flex mb-2 text-sm text-gray-500" aria-label="Breadcrumb">
+                <a href="/" class="hover:text-indigo-600">Home</a>
+                <span class="mx-2">/</span>
+                <span class="text-gray-900 font-medium">Monthly Summary</span>
+            </nav>
+            <h1 class="text-3xl font-bold text-gray-900 flex items-center gap-3">
+                <span class="text-indigo-600">🧬</span> Software + Healthcare
+            </h1>
+            <p class="text-gray-600 mt-1">Real opportunities from the last 30 days matching both Software and Healthcare criteria.</p>
+        </div>
+        <div class="bg-indigo-50 border border-indigo-100 rounded-xl px-6 py-4 flex items-center gap-4">
+            <div class="text-3xl">📊</div>
+            <div>
+                <div class="text-2xl font-bold text-indigo-900">{{ total }}</div>
+                <div class="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Matches Found</div>
+            </div>
+        </div>
+    </div>
+
+    {% if tenders %}
+    <div class="space-y-6">
+        {% for tender in tenders %}
+        <div class="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+            {% if tender.relevance_score >= 15 %}
+            <div class="absolute top-0 right-0 bg-amber-400 text-amber-950 text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
+                High Value
+            </div>
+            {% endif %}
+            
+            <div class="flex flex-col lg:flex-row gap-6">
+                <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span class="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-bold rounded uppercase tracking-tight">{{ tender.source }}</span>
+                        {% if tender.is_sme_friendly %}
+                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded uppercase tracking-tight flex items-center gap-1">
+                            <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                            SME Friendly
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <h2 class="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors mb-2">
+                        <a href="/tenders/{{ tender.id }}">{{ tender.title }}</a>
+                    </h2>
+                    
+                    <p class="text-sm font-semibold text-indigo-600 mb-3">{{ tender.buyer }}</p>
+                    
+                    <p class="text-gray-600 text-sm line-clamp-2 mb-4">
+                        {{ tender.description }}
+                    </p>
+                    
+                    <div class="flex flex-wrap gap-4 text-xs text-gray-500">
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-semibold text-gray-900">Budget:</span>
+                            <span class="text-emerald-600 font-bold text-sm">{{ tender.budget_amount|format_budget }}</span>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <span class="font-semibold text-gray-900">Published:</span>
+                            {{ tender.published_at[:10] }}
+                        </div>
+                        {% if tender.deadline %}
+                        <div class="flex items-center gap-1.5 font-medium text-amber-600">
+                            <span class="font-semibold text-gray-900">Deadline:</span>
+                            {{ tender.deadline[:10] }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="lg:w-48 flex lg:flex-col justify-between lg:justify-center items-center gap-4 border-t lg:border-t-0 lg:border-l border-gray-50 pt-4 lg:pt-0 lg:pl-6">
+                    <div class="text-center w-full">
+                        <div class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Score</div>
+                        <div class="text-3xl font-black text-gray-900">{{ tender.relevance_score }}<span class="text-sm text-gray-400 font-normal">/20</span></div>
+                    </div>
+                    
+                    <a href="{{ tender.source_url }}" target="_blank" class="flex-shrink-0 w-full bg-gray-900 hover:bg-black text-white text-xs font-bold py-3 px-4 rounded-xl text-center transition-all flex items-center justify-center gap-2">
+                        Official Notice
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="mt-12 flex justify-center items-center gap-2">
+        {% if page > 1 %}
+        <a href="/healthtech-monthly?page={{ page - 1 }}" class="p-2 rounded-lg border border-gray-200 hover:border-indigo-600 hover:text-indigo-600 transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        </a>
+        {% endif %}
+        
+        <div class="flex items-center gap-1">
+            {% for p in range(1, total_pages + 1) %}
+            {% if p == page %}
+            <span class="w-10 h-10 flex items-center justify-center rounded-lg bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-100">{{ p }}</span>
+            {% elif p <= 3 or p >= total_pages - 2 or (p >= page - 1 and p <= page + 1) %}
+            <a href="/healthtech-monthly?page={{ p }}" class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-200 hover:border-indigo-600 hover:text-indigo-600 transition-all font-medium">{{ p }}</a>
+            {% elif p == 4 or p == total_pages - 3 %}
+            <span class="text-gray-400 mx-1">...</span>
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        {% if page < total_pages %}
+        <a href="/healthtech-monthly?page={{ page + 1 }}" class="p-2 rounded-lg border border-gray-200 hover:border-indigo-600 hover:text-indigo-600 transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="bg-gray-50 rounded-3xl p-16 text-center">
+        <div class="text-6xl mb-6">📡</div>
+        <h3 class="text-xl font-bold text-gray-900 mb-2">No Monthly Tenders Found</h3>
+        <p class="text-gray-500 max-w-md mx-auto">We couldn't find any Software + Healthcare tenders from the last 30 days. Try running a deep crawl.</p>
+        <button onclick="triggerDeepCrawl()" class="mt-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-2xl transition-all shadow-lg shadow-indigo-100">
+            Run 30-Day Crawl
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+async function triggerDeepCrawl() {
+    const btn = event.target;
+    const originalText = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = "Crawling... (may take 1 min)";
+    
+    try {
+        const response = await fetch('/api/crawl?days_back=30', { method: 'POST' });
+        const data = await response.json();
+        alert(`Crawl complete! Found ${data.new_tenders} new software + healthcare tenders.`);
+        location.reload();
+    } catch (e) {
+        alert("Crawl failed. Please try again later.");
+        btn.disabled = false;
+        btn.innerText = originalText;
+    }
+}
+</script>
+{% endblock %}
